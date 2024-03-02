@@ -21,13 +21,32 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+const uint16_t PROGMEM copy_combo[] = {KC_C, KC_V, COMBO_END};
+const uint16_t PROGMEM paste_combo[] = {KC_V, KC_B, COMBO_END};
+const uint16_t PROGMEM cut_combo[] = {KC_X, KC_C, COMBO_END};
+const uint16_t PROGMEM undo_combo[] = {KC_Z, KC_X, COMBO_END};
+
+enum combos {
+    COPY_COMBO,
+    PASTE_COMBO,
+    CUT_COMBO,
+    UNDO_COMBO
+};
+
+combo_t key_combos[] = {
+    [COPY_COMBO] = COMBO(copy_combo, LGUI(KC_C)),
+    [PASTE_COMBO] = COMBO(paste_combo, LGUI(KC_V)),
+    [CUT_COMBO] = COMBO(cut_combo, LGUI(KC_X)),
+    [UNDO_COMBO] = COMBO(undo_combo, LGUI(KC_Z)),
+};
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Main Layer
     [0] = LAYOUT_split_3x6_3(
-        KC_ESC,         KC_Q,         KC_W,         KC_E,         KC_R,   KC_T,                             KC_Y,    KC_U,    KC_I,         KC_O,         KC_P,            KC_BSLS,
-        KC_MINS,        LCTL_T(KC_A), LALT_T(KC_S), LGUI_T(KC_D), KC_F,   KC_G,                             KC_H,    KC_J,    RGUI_T(KC_K), RALT_T(KC_L), RCTL_T(KC_SCLN), KC_QUOT,
-        LSFT(KC_LALT),  KC_Z,         KC_X,         KC_C,         KC_V,   KC_B,                             KC_N,    KC_M,    KC_COMM,      KC_DOT,       KC_SLSH,         LCTL(KC_UP),
-                                                                  TT(2),  MO(1),   KC_ENT,         KC_SPC, KC_LSFT,  KC_BSPC
+        KC_ESC,        KC_Q,         KC_W,         KC_E,         KC_R,          KC_T,                       KC_Y,     KC_U,         KC_I,         KC_O,         KC_P,            KC_BSLS,
+        KC_MINS,       LCTL_T(KC_A), LALT_T(KC_S), LGUI_T(KC_D), LSFT_T(KC_F),  KC_G,                       KC_H,     LSFT_T(KC_J), RGUI_T(KC_K), RALT_T(KC_L), RCTL_T(KC_SCLN), KC_QUOT,
+        LSFT(KC_LALT), KC_Z,         KC_X,         KC_C,         KC_V,          KC_B,                       KC_N,     KC_M,         KC_COMM,      KC_DOT,       KC_SLSH,         LCTL(KC_UP),
+                                                                 TT(2),         MO(1),   KC_ENT,    KC_SPC, KC_LSFT,  KC_BSPC
     ),
     // Symbols Layer
     [1] = LAYOUT_split_3x6_3(

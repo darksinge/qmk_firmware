@@ -1,1 +1,2 @@
 SERIAL_DRIVER = usart
+COMBO_ENABLE = yes

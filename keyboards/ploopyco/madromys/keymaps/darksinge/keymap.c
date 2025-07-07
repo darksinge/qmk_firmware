@@ -30,12 +30,12 @@ static bool drag_scroll_toggled = false;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
-        KC_BTN4, KC_BTN5, TD(TD_DRAG_SCROLL), KC_BTN1,
-        MO(1),                                              KC_BTN2
+        KC_BTN4, LT(1, KC_BTN5), TD(TD_DRAG_SCROLL), KC_BTN1,
+        KC_BTN1,                                     KC_BTN2
     ),
     [1] = LAYOUT(
-        DPI_CONFIG, KC_BTN5, DRAG_SCROLL_TOG, KC_BTN2,
-        KC_ENT,                              KC_NO
+        KC_ENT,      KC_NO, LGUI(KC_C), LGUI(KC_V),
+        LGUI(KC_W),                     DPI_CONFIG
     ),
 };
 

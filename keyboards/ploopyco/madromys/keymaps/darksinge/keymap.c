@@ -17,15 +17,64 @@
  */
 #include QMK_KEYBOARD_H
 
+enum custom_keycodes {
+    DRAG_SCROLL_TOG = SAFE_RANGE,
+};
+
+enum tap_dance_codes {
+    TD_DRAG_SCROLL,
+};
+
+extern bool is_drag_scroll;
+static bool drag_scroll_toggled = false;
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
-        KC_BTN4, KC_BTN5, DRAG_SCROLL, KC_BTN1,
-        KC_BTN2,                       MO(1)
+        KC_BTN4, KC_BTN5, TD(TD_DRAG_SCROLL), KC_BTN1,
+        MO(1),                                              KC_BTN2
     ),
     [1] = LAYOUT(
-        DPI_CONFIG, KC_BTN5, DRAG_SCROLL, KC_BTN2,
-        KC_ENT,                           KC_NO
+        DPI_CONFIG, KC_BTN5, DRAG_SCROLL_TOG, KC_BTN2,
+        KC_ENT,                              KC_NO
     ),
+};
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case DRAG_SCROLL_TOG:
+            if (record->event.pressed) {
+                toggle_drag_scroll();
+            }
+            break;
+    }
+    return true;
+}
+
+void drag_scroll_tap_dance_each(tap_dance_state_t *state, void *user_data) {
+    if (state->pressed && !drag_scroll_toggled) {
+        is_drag_scroll = true;
+    }
+}
+
+void drag_scroll_tap_dance_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 1) {
+        if (state->interrupted || !state->pressed) {
+            // This was a tap - toggle the persistent state
+            drag_scroll_toggled = !drag_scroll_toggled;
+            is_drag_scroll = drag_scroll_toggled;
+        }
+        // If still pressed, it's a hold - keep drag scroll on temporarily
+    }
+}
+
+void drag_scroll_tap_dance_reset(tap_dance_state_t *state, void *user_data) {
+    if (!drag_scroll_toggled) {
+        is_drag_scroll = false;
+    }
+}
+
+tap_dance_action_t tap_dance_actions[] = {
+    [TD_DRAG_SCROLL] = ACTION_TAP_DANCE_FN_ADVANCED(drag_scroll_tap_dance_each, drag_scroll_tap_dance_finished, drag_scroll_tap_dance_reset),
 };
 
 /* const uint16_t PROGMEM boot_combo[] = {KC_LEFT, KC_RIGHT, KC_UP, COMBO_END}; */

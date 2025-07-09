@@ -19,33 +19,49 @@
 
 enum custom_keycodes {
     DRAG_SCROLL_TOG = SAFE_RANGE,
+    KC_SNIPER,
 };
 
 enum tap_dance_codes {
     TD_DRAG_SCROLL,
+    TD_SNIPER_DRAG_SCROLL,
 };
 
 extern bool is_drag_scroll;
 static bool drag_scroll_toggled = false;
+static bool sniper_mode_active = false;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
         KC_BTN4, LT(1, KC_BTN5), TD(TD_DRAG_SCROLL), KC_BTN1,
-        KC_BTN1,                                     KC_BTN2
+        KC_BTN1,                                     TD(TD_SNIPER_DRAG_SCROLL)
     ),
     [1] = LAYOUT(
         KC_ENT,      KC_NO, LGUI(KC_C), LGUI(KC_V),
-        LGUI(KC_W),                     DPI_CONFIG
+        KC_SNIPER,                     DPI_CONFIG
     ),
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    static uint16_t original_dpi;
+
     switch (keycode) {
         case DRAG_SCROLL_TOG:
             if (record->event.pressed) {
                 toggle_drag_scroll();
             }
             break;
+        case KC_SNIPER:
+            if (record->event.pressed) {
+                sniper_mode_active = !sniper_mode_active;
+                if (sniper_mode_active) {
+                    original_dpi = pointing_device_get_cpi();
+                    pointing_device_set_cpi(original_dpi / 2);
+                } else {
+                    pointing_device_set_cpi(original_dpi);
+                }
+            }
+            return false;
     }
     return true;
 }
@@ -73,46 +89,43 @@ void drag_scroll_tap_dance_reset(tap_dance_state_t *state, void *user_data) {
     }
 }
 
+void sniper_dance_each(tap_dance_state_t *state, void *user_data) {
+    if (state->pressed) {
+        is_drag_scroll = true;
+    }
+}
+
+void sniper_dance_finished(tap_dance_state_t *state, void *user_data) {
+    static uint16_t original_dpi;
+
+    if (state->count == 1) {
+        if (state->interrupted || !state->pressed) {
+            // This was a tap - toggle sniper mode
+            sniper_mode_active = !sniper_mode_active;
+            if (sniper_mode_active) {
+                original_dpi = pointing_device_get_cpi();
+                pointing_device_set_cpi(original_dpi / 2);
+            } else {
+                pointing_device_set_cpi(original_dpi);
+            }
+        }
+    }
+}
+
+void sniper_dance_reset(tap_dance_state_t *state, void *user_data) {
+    is_drag_scroll = false;
+}
+
 tap_dance_action_t tap_dance_actions[] = {
-    [TD_DRAG_SCROLL] = ACTION_TAP_DANCE_FN_ADVANCED(drag_scroll_tap_dance_each, drag_scroll_tap_dance_finished, drag_scroll_tap_dance_reset),
+    [TD_DRAG_SCROLL] = ACTION_TAP_DANCE_FN_ADVANCED(
+        drag_scroll_tap_dance_each,
+        drag_scroll_tap_dance_finished,
+        drag_scroll_tap_dance_reset
+    ),
+    [TD_SNIPER_DRAG_SCROLL] = ACTION_TAP_DANCE_FN_ADVANCED(
+        sniper_dance_each,
+        sniper_dance_finished,
+        sniper_dance_reset
+    ),
 };
 
-/* const uint16_t PROGMEM boot_combo[] = {KC_LEFT, KC_RIGHT, KC_UP, COMBO_END}; */
-/**/
-/* combo_t key_combos[] = { */
-/*     COMBO(boot_combo, QK_BOOT), */
-/* }; */
-/**/
-/* const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = { */
-/*     [0] = LAYOUT( */
-/*         LT(2,KC_BTN4), // Tap = Button 4, Hold = Layer 2 */
-/*         KC_BTN5, */
-/*         DRAG_SCROLL, */
-/*         LT(3, KC_BTN2), // Tap = Button 2, Hold = Layer 3 */
-/*         KC_BTN1, */
-/*         LT(1,KC_ENTER) // Tap = Enter, Hold = Layer 1 */
-/*     ), */
-/*     [1] = LAYOUT( */
-/*         KC_UP,  */
-/*         KC_LEFT, */
-/*         KC_RIGHT, */
-/*         LGUI(KC_TAB), // Windows + tab to switch apps */
-/*         KC_DOWN, */
-/*         KC_NO */
-/*     ), */
-/*     [2] = LAYOUT( */
-/*         KC_NO, */
-/*         DPI_CONFIG, // DPI toggle 300/600 */
-/*         KC_NO, */
-/*         KC_NO, */
-/*         LCTL(KC_C), // Copy */
-/*         LCTL(KC_V) // Paste */
-/*     ), */
-/*     [3] = LAYOUT( */
-/*         LCTL(KC_BSPC), // delete word left */
-/*         KC_NO, */
-/*         KC_NO, */
-/*         KC_NO, */
-/*         KC_BSPC, */
-/*         KC_NO */
-/*     ) */
